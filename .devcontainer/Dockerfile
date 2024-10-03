@@ -16,5 +16,7 @@ RUN corepack enable
 # RUN python -m pip install --upgrade pip
 # RUN pip install --target=/python safetensors opencv-python-headless opencv-contrib-python torch torchsde transformers safetensors accelerate scikit-image numexpr lpips imageio-ffmpeg segment_anything timm addict yapf insightface onnxruntime openmim  GitPython python-color-transfer pydub datasets pilgram spandrel kornia piexif omegaconf diffusers ultralytics gitpython torchaudio sentencepiece
 
+RUN apt -y install telnet
+
 RUN adduser datasetter
 USER datasetter

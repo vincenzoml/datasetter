@@ -3,10 +3,11 @@
     "dockerfile": "Dockerfile"
   },    
   "runArgs": [
-    "--gpus=all"
+    "--gpus=all",
     // "--device",
     // "nvidia.com/gpu=all",
     // "--userns=keep-id"
+    "--net=host"
   ],
   "mounts": [
     {
