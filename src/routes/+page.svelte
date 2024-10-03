@@ -66,6 +66,4 @@
 	<button on:click={backward}> &larr; </button>
 	<button on:click={updateVolumes}>{n}</button>
 	<button on:click={forward}> &rarr; </button>
-
-	{@debug vl }
 </main>
