@@ -1,16 +1,20 @@
 <script lang="ts">
 	// https://niivue.github.io/niivue/devdocs/ (library documentation)
 
+	import { Niivue, NVImage } from '@niivue/niivue'
 	import { onMount } from 'svelte'
 	import { images } from './ImageCache'
-	import { Niivue, NVImage } from '@niivue/niivue'
 
 	export let src: string
 	export let overlays: string[] = []
-	export let canvasID: string
+	export let overlayColors: Record<string, RgbaColor | string> = {}	
+	
+	$: {
+		console.log('SRC', src, 'OVERLAYS', overlays)
+	}
 
 	import type { RgbaColor } from 'svelte-awesome-color-picker'
-	export let overlayColors: Record<string, RgbaColor> = {}
+	const colormapColors: Record<string, RgbaColor | string> = {}
 
 	function delay(ms: number) {
 		return new Promise((resolve) => setTimeout(resolve, ms))
@@ -40,7 +44,7 @@
 	function prefetch(overlay: string) {
 		if (!images[overlay]) {
 			images[overlay] = (async () => {
-				await delay(100)
+				// await delay(10) TODO: maybe this is still needed
 				return NVImage.loadFromUrl({
 					url: overlay,
 					colormap: overlay
@@ -50,28 +54,39 @@
 	}
 
 	let nv: Niivue
+	let canvas: HTMLCanvasElement
 
 	onMount(async () => {
-		//@ts-ignore
-		// const { Niivue, NVImage } = await import('../../niivue/src/niivue')
-
 		nv = new Niivue({ isResizeCanvas: true })
-		nv.attachTo(canvasID)
-		nv.setSliceType(nv.sliceTypeAxial)
-
-		//nv.opts.isColorbar = true
+		nv.attachToCanvas(canvas)
+		nv.setSliceType(nv.sliceTypeMultiplanar)
 	})
 
-	async function updateOverlayColors(nv: Niivue, overlayColors: Record<string, RgbaColor>) {
+	async function updateOverlayColors(
+		nv: Niivue,
+		overlayColors: Record<string, RgbaColor | string>
+	) {
 		if (nv) {
 			for (const [index, overlay] of overlays.entries()) {
+				console.log('OVERLAYNAME', overlay)
 				if (overlayColors[overlay]) {
-					const rgb = overlayColors[overlay]
+					const color = overlayColors[overlay]
 
-					if (colormapColors[overlay] != rgb) {
-						nv.addColormap(overlay, mkCmap({ ...rgb }))
-						nv.setOpacity(index + 1, rgb.a)
-						colormapColors[overlay] = rgb
+					if (colormapColors[overlay] != color) {
+						colormapColors[overlay] = color
+
+						if (typeof color === 'string') {
+							console.log(
+								nv.volumes,
+								nv.volumes.map((x) => x.id)
+							)
+							nv.setColorMap(nv.volumes[index + 1].id, color)
+							nv.setOpacity(index+1, 0.5)
+						} else {
+							nv.addColormap(overlay, mkCmap({ ...color }))
+							// nv.setColorMap(overlay, overlay) // TODO: The colourmap has the same name as the overlay. Period. Could also be called like the rgb name and not recomputed each time? Does this work?
+							nv.setOpacity(index + 1, color.a)
+						}
 						nv.updateGLVolume()
 					}
 				}
@@ -81,22 +96,23 @@
 
 	async function setOverlay(overlay: string, i: number) {
 		prefetch(overlay)
-		await delay(0)
+		// await delay(0) // TODO: maybe this is still needed
 
 		let img = await images[overlay]
+
 		if (img && ((0 == i && src == overlay) || overlays.includes(overlay))) {
 			// FIX for when the image takes a long time to load and the user has deselected the overlay in the meantime
 			if (nv.volumes[i] && nv.volumes[i].url != overlay) {
 				await delay(0)
-				await nv.setVolume(nv.volumes[i], -1)
+				nv.setVolume(nv.volumes[i], -1)
 			}
 			if (!nv.volumes[i] || nv.volumes[i].url != overlay) {
 				const id = nv.getVolumeIndexByID(img.id)
 				if (id < 0) {
-					await nv.addVolume(img)
+					nv.addVolume(img)
 				}
 				await delay(0)
-				if (nv.volumes[i] != img) await nv.setVolume(img, i)
+				if (nv.volumes[i] != img) nv.setVolume(img, i)
 			}
 		}
 	}
@@ -110,11 +126,10 @@
 		})
 
 		for (const { cl, img } of close) {
-			//const img = await images[cl] // TODO: here we wait if the image is not loaded yet, but in that case, we should just cancel the previous operation
 			const id = nv.getVolumeIndexByID(img.id)
 			if (id >= 0 && !overlays.includes(cl))
 				// FIX for when the image takes a long time to load and the user has re-selected the overlay in the meantime
-				await nv.setVolume(img, -1)
+				nv.setVolume(img, -1)
 		}
 
 		let i = 1
@@ -129,21 +144,23 @@
 	}
 
 	$: {
-		if (src && NVImage && nv) {
-			setBaseOverlay(src)
-		}
-	}
+		;(async () => {
+			if (src && NVImage && nv) {
+				await setBaseOverlay(src)
+			}
 
-	$: if (nv && overlays !== undefined) {
-		try {
-			updateOverlays().then(() => updateOverlayColors(nv, overlayColors))
-		} catch (e) {
-			console.warn('ERROR in update overlays', e)
-		}
+			if (nv && overlays !== undefined) {
+				try {
+					await updateOverlays()
+					updateOverlayColors(nv, overlayColors)
+				} catch (e) {
+					console.warn('ERROR in update overlays', e)
+				}
+			}
+		})()
 	}
-
-	const colormapColors: Record<string, RgbaColor> = {}
 </script>
 
-<canvas id={canvasID} style="width:100%;height:100" />
-
+<div class="size-full">
+	<canvas bind:this={canvas} />
+</div>

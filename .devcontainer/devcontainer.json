@@ -30,7 +30,9 @@
         "bradlc.vscode-tailwindcss",
         "ms-python.autopep8",
         "viveksjain.remreload",
-        "csstools.postcss"
+        "csstools.postcss",
+        "austenc.tailwind-docs",
+        "bourhaouta.tailwindshades"
       ]
     }
   }
