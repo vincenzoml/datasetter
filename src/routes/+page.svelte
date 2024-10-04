@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { Niivue } from '@niivue/niivue'
-	import { onMount } from 'svelte'
-
 	const volumeList = [
 		[
 			{
@@ -35,41 +32,31 @@
 
 	let n = 0
 
-	let nv: Niivue
-
-	async function updateVolumes() {
-		await nv.loadVolumes(volumeList[n])
-	}
-
 	async function forward() {
 		n = (n + 1) % volumeList.length
-		await updateVolumes()
 	}
 
 	async function backward() {
 		n = (n - 1) % volumeList.length
 		if (n < 0) n = volumeList.length - 1
-		await updateVolumes()
 	}
 
-	onMount(async () => {
-		const originalFetch = window.fetch
-		
-		window.fetch = (url, options = {}) => {
-			options.cache = options.cache || 'force-cache' // Usa la cache se disponibile
-			return originalFetch(url, options)
-		}
+	// onMount(async () => {
+	// 	const originalFetch = window.fetch
 
-		nv = new Niivue()
-		await nv.attachTo('gl')
+	// 	window.fetch = (url, options = {}) => {
+	// 		options.cache = options.cache || 'force-cache' // Usa la cache se disponibile
+	// 		return originalFetch(url, options)
+	// 	}
 
-		updateVolumes()
-	})
+	// })
+
+	import Niivue from '$lib/components/Niivue.svelte'
 </script>
 
 <main>
-	<canvas id="gl" height="400px"></canvas>
+	<Niivue canvasID="gl" src={volumeList[n][0].url}></Niivue>
 	<button on:click={backward}> &larr; </button>
-	<button on:click={updateVolumes}>{n}</button>
+	<button>{n}</button>
 	<button on:click={forward}> &rarr; </button>
 </main>

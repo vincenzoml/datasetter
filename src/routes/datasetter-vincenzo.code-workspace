@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"name": "niivue",
+			"path": "../../../../parent/home/ciancia/data/local/repos/niivue"
+		},
+		{
+			"name": "VLUI-23",
+			"path": "../../../../parent/home/ciancia/data/local/repos/VLUI-23"
+		}
+	],
+	"settings": {}
+}
