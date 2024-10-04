@@ -48,17 +48,23 @@
 
 	async function backward() {
 		n = (n - 1) % volumeList.length
+		if (n < 0) n = volumeList.length - 1
 		await updateVolumes()
 	}
 
 	onMount(async () => {
+		const originalFetch = window.fetch
+		
+		window.fetch = (url, options = {}) => {
+			options.cache = options.cache || 'force-cache' // Usa la cache se disponibile
+			return originalFetch(url, options)
+		}
+
 		nv = new Niivue()
 		await nv.attachTo('gl')
 
 		updateVolumes()
 	})
-
-	$: vl = nv ? nv.volumes : ""
 </script>
 
 <main>
