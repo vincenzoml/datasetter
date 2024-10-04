@@ -32,8 +32,6 @@
 
 	let n = 0
 
-
-
 	$: src = volumeList[n][0].url
 	$: overlays = volumeList[n].slice(1).map((x) => x.url)
 	$: overlayColors = Object.fromEntries(

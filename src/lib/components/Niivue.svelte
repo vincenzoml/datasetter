@@ -68,7 +68,6 @@
 	) {
 		if (nv) {
 			for (const [index, overlay] of overlays.entries()) {
-				console.log('OVERLAYNAME', overlay)
 				if (overlayColors[overlay]) {
 					const color = overlayColors[overlay]
 
